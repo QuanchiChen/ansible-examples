@@ -1,0 +1,65 @@
+---
+
+- name: Installing updates
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Installing updates (Ubuntu)
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing updates (Red Hat)
+      ansible.builtin.yum:
+        update_only: true
+        update_cache: true
+      when: ansible_distribution == "RedHat"
+
+- name: Configuring web servers
+  hosts: web_servers
+  become: true
+  tasks:
+    - name: Installing apache and php packages for Ubuntu servers
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - libapache2-mod-php
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing apache and php packages for Red Hat servers
+      ansible.builtin.yum:
+        name:
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+- name: Configuring db servers
+  hosts: db_servers
+  become: true
+  tasks:
+    - name: Installing mariadb for Ubuntu servers
+      ansible.builtin.apt:
+        name:
+          - mariadb-server
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing mariadb for Red Hat servers
+      ansible.builtin.yum:
+        name:
+          - mariadb
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+- name: Configuring file servers
+  hosts: db_servers
+  become: true
+  tasks:
+    - name: Installing samba for file servers
+      ansible.builtin.package:
+        name:
+          - samba
+        state: latest

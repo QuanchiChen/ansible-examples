@@ -1,0 +1,40 @@
+---
+
+- name: Installing updates
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Installing updates (Ubuntu)
+      ansible.builtin.apt:
+        upgrade: dist
+        update_cache: true
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing updates (Red Hat)
+      ansible.builtin.yum:
+        update_only: true
+        update_cache: true
+      when: ansible_distribution == "RedHat"
+
+- name: Adding users
+  hosts: all
+  become: true
+  tasks:
+    - name: Creating simone users
+      ansible.builtin.user:
+        name: simone
+        groups:
+          - root
+
+    - name: Adding ssh keys for simone
+      ansible.posix.authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB3JxXtU/66Hvkr3mQhXu+Sw501eg3ZtqZ2sHFr90Fjp ansible"
+
+    - name: Adding sudoers files for simone
+      ansible.builtin.copy:
+        src: sudoer_simone
+        dest: /etc/sudoers.d/simone
+        owner: root
+        group: root
+        mode: "440"

@@ -1,0 +1,47 @@
+---
+
+- name: Updating repo cache
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Updating repo cache (Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Updating repo cache (Red Hat)
+      ansible.builtin.yum:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "RedHat"
+
+- name: Adding users
+  hosts: all
+  become: true
+  roles:
+    - base
+
+- name: Configuring workstations
+  hosts: workstations
+  become: true
+  roles:
+    - workstations
+
+- name: Configuring web servers
+  hosts: web_servers
+  become: true
+  roles:
+    - web_servers
+
+- name: Configuring db servers
+  hosts: db_servers
+  become: true
+  roles:
+    - db_servers
+
+- name: Configuring file servers
+  hosts: file_servers
+  become: true
+  roles:
+    - file_servers

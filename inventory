@@ -1,0 +1,12 @@
+[web_servers]
+ubuntu@13.239.1.226   apache_package=apache2 php_package=libapache2-mod-php
+ec2-user@13.55.77.148 apache_package=httpd   php_package=php
+
+[db_servers]
+ubuntu@3.25.93.68     apache_package=apache2 php_package=libapache2-mod-php
+
+[file_servers]
+ubuntu@3.25.193.178   apache_package=apache2 php_package=libapache2-mod-php
+
+[workstations]
+ubuntu@13.239.1.226

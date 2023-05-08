@@ -1,0 +1,29 @@
+- name: Installing apache and php packages
+  ansible.builtin.package:
+    name:
+      - "{{ apache_package_name }}"
+      - "{{ php_package_name }}"
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+- name: Starting and enabling apache services
+  ansible.builtin.service:
+    name: "{{ apache_service }}"
+    state: started
+    enabled: true
+
+- name: Changing email address for admin
+  ansible.builtin.lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    regexp: '^ServerAdmin'
+    line: ServerAdmin somebody@somewhere.com
+  when: ansible_distribution == "RedHat"
+  notify: Restarting apache
+
+- name: Copying default html file
+  ansible.builtin.copy:
+    src: default_site.html
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: "644"

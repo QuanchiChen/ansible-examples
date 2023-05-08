@@ -1,0 +1,13 @@
+- name: Installing mariadb for Ubuntu servers
+  ansible.builtin.apt:
+    name:
+      - mariadb-server
+    state: latest
+  when: ansible_distribution == "Ubuntu"
+
+- name: Installing mariadb for Red Hat servers
+  ansible.builtin.yum:
+    name:
+      - mariadb
+    state: latest
+  when: ansible_distribution == "RedHat"

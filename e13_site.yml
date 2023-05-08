@@ -1,0 +1,120 @@
+---
+
+- name: Updating repo cache
+  hosts: all
+  become: true
+  pre_tasks:
+    - name: Updating repo cache (Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Updating repo cache (Red Hat)
+      ansible.builtin.yum:
+        update_cache: true
+      changed_when: false
+      when: ansible_distribution == "RedHat"
+
+- name: Adding users
+  hosts: all
+  become: true
+  tasks:
+    - name: Adding ssh keys for simone
+      ansible.posix.authorized_key:
+        user: simone
+        key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIB3JxXtU/66Hvkr3mQhXu+Sw501eg3ZtqZ2sHFr90Fjp ansible"
+
+- name: Configuring workstations
+  hosts: workstations
+  become: true
+  tasks:
+    - name: Installing unzip
+      ansible.builtin.package:
+        name: unzip
+
+    - name: Installing terraform
+      ansible.builtin.unarchive:
+        src: https://releases.hashicorp.com/terraform/1.4.5/terraform_1.4.5_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: true
+        owner: root
+        group: root
+        mode: "755"
+
+- name: Configuring web servers
+  hosts: web_servers
+  become: true
+  tasks:
+    - name: Installing apache and php packages for Ubuntu servers
+      ansible.builtin.apt:
+        name:
+          - apache2
+          - libapache2-mod-php
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing apache and php packages for Red Hat servers
+      ansible.builtin.yum:
+        name:
+          - httpd
+          - php
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+    - name: Starting httpd for Red Hat servers
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+      when: ansible_distribution == "RedHat"
+
+    - name: Changing email address for admin
+      ansible.builtin.lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        regexp: '^ServerAdmin'
+        line: ServerAdmin somebody@somewhere.net
+      when: ansible_distribution == "RedHat"
+      notify: Restarting httpd
+
+    - name: Copying default html file
+      ansible.builtin.copy:
+        src: default_site.html
+        dest: /var/www/html/index.html
+        owner: root
+        group: root
+        mode: "644"
+
+  handlers:
+    - name: Restarting httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+
+- name: Configuring db servers
+  hosts: db_servers
+  become: true
+  tasks:
+    - name: Installing mariadb for Ubuntu servers
+      ansible.builtin.apt:
+        name:
+          - mariadb-server
+        state: latest
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Installing mariadb for Red Hat servers
+      ansible.builtin.yum:
+        name:
+          - mariadb
+        state: latest
+      when: ansible_distribution == "RedHat"
+
+- name: Configuring file servers
+  hosts: db_servers
+  become: true
+  tasks:
+    - name: Installing samba for file servers
+      ansible.builtin.package:
+        name:
+          - samba
+        state: latest
